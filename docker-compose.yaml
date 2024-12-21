@@ -1,0 +1,44 @@
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: user
+      WORDPRESS_DB_PASSWORD: password
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - ./wp-content:/var/www/html/wp-content
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: user
+      PMA_PASSWORD: password
+
+  # mock-api:
+  #   image: typicode/json-server
+  #   volumes:
+  #     - ./mock-api:/data
+  #   command: ["--watch", "/data/db.json"]
+  #   ports:
+  #     - "3000:3000"
+
+volumes:
+  db_data:
