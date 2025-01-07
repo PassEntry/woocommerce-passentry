@@ -12,6 +12,18 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Add this near the top of the file, after the initial checks
+if (!defined('WP_DEBUG')) {
+    define('WP_DEBUG', true);
+}
+if (!defined('WP_DEBUG_LOG')) {
+    define('WP_DEBUG_LOG', true);
+}
+if (!defined('WP_DEBUG_DISPLAY')) {
+    define('WP_DEBUG_DISPLAY', false);
+}
+@ini_set('display_errors', 0);
+
 // Check for WooCommerce dependency.
 function woocommerce_passentry_api_check_dependencies() {
     if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
