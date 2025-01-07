@@ -111,32 +111,43 @@ class Order_Template_Handler {
     private function create_passes($product, $order, $quantity) {
         $pass_urls = [];
         $template_uuid = get_post_meta($product->get_id(), '_passentry_template_uuid', true);
+        error_log('template_uuid: ' . strval($template_uuid));
         
         // Get NFC and QR settings
         $nfc_enabled = get_post_meta($product->get_id(), '_passentry_nfc_enabled', true) === 'yes';
         $qr_enabled = get_post_meta($product->get_id(), '_passentry_qr_enabled', true) === 'yes';
+        error_log("nfc_enabled: " . ($nfc_enabled ? 'true' : 'false'));
+        error_log("qr_enabled: " . ($qr_enabled ? 'true' : 'false'));
 
+        // Get field mappings
+        $field_mappings_json = get_post_meta($product->get_id(), '_passentry_field_mappings', true);
+        $field_mappings = !empty($field_mappings_json) ? json_decode($field_mappings_json, true) : [];
+        error_log("field_mappings: " . json_encode($field_mappings));
         $api = new API_Handler();
 
         for ($i = 0; $i < $quantity; $i++) {
-            // Prepare pass data
+            // Prepare pass data with NFC and QR settings
             $pass_data = [
                 'pass' => [
                     'nfc' => ['enabled' => $nfc_enabled],
-                    'qr' => ['enabled' => $qr_enabled]
+                    'qr' => $qr_enabled ? [
+                        'value' => '123abcd',
+                        'displayText' => true
+                    ] : [
+                        'enabled' => false
+                    ]
                 ]
             ];
 
-            // Get all template fields and their values
-            $template_fields = $this->get_template_fields($product->get_id());
-            foreach ($template_fields as $field_id => $field_config) {
-                if ($field_config['type'] === 'static') {
-                    $pass_data['pass'][$field_id] = $field_config['value'];
-                } else {
-                    // Handle dynamic values from order/product data
-                    $pass_data['pass'][$field_id] = $this->get_dynamic_value($field_config['value'], $order, $product);
+            // Add field values from mappings
+            if (!empty($field_mappings)) {
+                foreach ($field_mappings as $field_id => $field_config) {
+                    if (isset($field_config['value'])) {
+                        $pass_data['pass'][$field_id] = $field_config['value'];
+                    }
                 }
             }
+            error_log("pass_data: " . json_encode($pass_data));
 
             // Create the pass
             $response = $api->request("/api/v1/passes?passTemplate={$template_uuid}", 'POST', $pass_data);
@@ -167,43 +178,12 @@ class Order_Template_Handler {
         foreach ($meta_keys as $meta) {
             if (strpos($meta->meta_key, '_type') === false) {
                 $field_id = str_replace('_passentry_', '', $meta->meta_key);
-                $type_key = "_passentry_{$field_id}_type";
-                $type = get_post_meta($product_id, $type_key, true);
-                
                 $fields[$field_id] = [
-                    'value' => $meta->meta_value,
-                    'type' => $type
+                    'value' => $meta->meta_value
                 ];
             }
         }
 
         return $fields;
-    }
-
-    private function get_dynamic_value($placeholder, $order, $product) {
-        // Remove {{ and }}
-        $field = trim($placeholder, '{}');
-        
-        // Split into object and property
-        $parts = explode('_', $field);
-        $object_type = array_shift($parts);
-        $property = implode('_', $parts);
-
-        switch ($object_type) {
-            case 'order':
-                $method = "get_$property";
-                return method_exists($order, $method) ? $order->$method() : '';
-                
-            case 'billing':
-            case 'shipping':
-                return $order->get_address($property, $object_type);
-                
-            case 'product':
-                $method = "get_$property";
-                return method_exists($product, $method) ? $product->$method() : '';
-                
-            default:
-                return '';
-        }
     }
 }
