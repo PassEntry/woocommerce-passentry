@@ -110,19 +110,106 @@ class Product_Template_Handler {
             </div>
 
             <script type="text/javascript">
-                jQuery(document).ready(function($) {
-                    var currentValues = {
-                        qr_enabled: <?php echo json_encode($qr_enabled === 'yes'); ?>,
-                        nfc_enabled: <?php echo json_encode($nfc_enabled === 'yes'); ?>
-                    };
+                jQuery(function($) {
+                    // Prevent default WooCommerce checkbox behavior
+                    $(document).off('click', '.woocommerce-save-button');
+                    
                     var templateInput = $('#_passentry_template_uuid');
                     var fieldsContainer = $('#passentry_template_fields');
                     var debounceTimeout;
 
-                    // Toggle fields visibility based on checkbox
-                    $('#_passentry_enabled').on('change', function() {
-                        $('.passentry_fields').toggle(this.checked);
+                    // Prevent form submission on checkbox changes
+                    $('form#post').on('submit', function(e) {
+                        if (e.target.activeElement.type === 'checkbox') {
+                            e.preventDefault();
+                            return false;
+                        }
                     });
+
+                    // Unbind any existing handlers first
+                    $('#_passentry_enabled').off('change');
+
+                    // Toggle fields visibility based on checkbox
+                    $('#_passentry_enabled').on('change', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        $('.passentry_fields').toggle(this.checked);
+                        return false;
+                    });
+
+                    // Toggle QR value field visibility
+                    $('#_passentry_qr_enabled').on('change', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        var $qrField = $('tr:has(input[name="passentry_value_qr_value"])');
+                        
+                        if (this.checked) {
+                            if ($qrField.length === 0) {
+                                // Create new QR field if it doesn't exist
+                                var $newRow = $('<tr>\
+                                    <td>' + wp.i18n.__('QR Code Value', 'woocommerce-passentry-api') + '</td>\
+                                    <td>\
+                                        <input type="hidden" name="passentry_field_qr_value" value="qr_value">\
+                                        <input type="hidden" name="passentry_label_qr_value" value="QR Code Value">\
+                                        <input type="text" name="passentry_value_qr_value" class="regular-text" \
+                                            style="width: 100%;" \
+                                            placeholder="' + wp.i18n.__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') + '">\
+                                    </td>\
+                                </tr>');
+                                
+                                // Insert after the first field in the mapping table
+                                $('.widefat tbody tr:first').after($newRow);
+                            } else {
+                                $qrField.show();
+                            }
+                        } else {
+                            $qrField.hide();
+                        }
+                        
+                        return false;
+                    });
+
+                    // Toggle Custom NFC value field visibility
+                    $('#_passentry_nfc_enabled').on('change', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        var $customNfcField = $('tr:has(input[name="passentry_value_custom_nfc_value"])');
+                        
+                        if (this.checked) {
+                            if ($customNfcField.length === 0) {
+                                // Create new Custom NFC field if it doesn't exist
+                                var $customNfcRow = $('<tr>\
+                                    <td>' + wp.i18n.__('Custom NFC Value', 'woocommerce-passentry-api') + '</td>\
+                                    <td>\
+                                        <input type="hidden" name="passentry_field_custom_nfc_value" value="custom_nfc_value">\
+                                        <input type="hidden" name="passentry_label_custom_nfc_value" value="Custom NFC Value">\
+                                        <input type="text" name="passentry_value_custom_nfc_value" class="regular-text" \
+                                            style="width: 100%;" \
+                                            placeholder="' + wp.i18n.__('Enter custom NFC value', 'woocommerce-passentry-api') + '">\
+                                    </td>\
+                                </tr>');
+                                
+                                // Insert after QR field if it exists, otherwise after first field
+                                var $qrField = $('tr:has(input[name="passentry_value_qr_value"])');
+                                if ($qrField.length > 0) {
+                                    $qrField.after($customNfcRow);
+                                } else {
+                                    $('.widefat tbody tr:first').after($customNfcRow);
+                                }
+                            } else {
+                                $customNfcField.show();
+                            }
+                        } else {
+                            $customNfcField.hide();
+                        }
+                        
+                        return false;
+                    });
+
+                    // Initial visibility state
+                    $('tr:has(input[name="passentry_value_qr_value"])').toggle($('#_passentry_qr_enabled').is(':checked'));
 
                     // Template input handling with debounce
                     templateInput.on('input', function() {
@@ -130,42 +217,42 @@ class Product_Template_Handler {
                         
                         debounceTimeout = setTimeout(function() {
                             var template_uuid = templateInput.val().trim();
-                            
                             if (template_uuid) {
-                                // Show loading indicator
-                                fieldsContainer.html('<p>Loading template...</p>');
-
-                                // Make AJAX call to fetch template data
-                                $.ajax({
-                                    url: ajaxurl,
-                                    type: 'POST',
-                                    data: {
-                                        action: 'load_template_fields',
-                                        template_uuid: template_uuid,
-                                        post_id: '<?php echo $post->ID; ?>',
-                                        nonce: '<?php echo wp_create_nonce("load_template_fields"); ?>'
-                                    },
-                                    success: function(response) {
-                                        if (response) {
-                                            fieldsContainer.html(response);
-                                            
-                                            // Restore checkbox handlers
-                                            $('#_passentry_qr_enabled, #_passentry_nfc_enabled').on('change', function() {
-                                                currentValues[this.name.replace('_passentry_', '')] = this.checked;
-                                            });
-                                        } else {
-                                            fieldsContainer.html('<p style="color: red;">No template found with this UUID</p>');
-                                        }
-                                    },
-                                    error: function() {
-                                        fieldsContainer.html('<p style="color: red;">Failed to load template</p>');
-                                    }
-                                });
+                                reloadTemplateFields(template_uuid);
                             } else {
                                 fieldsContainer.empty();
                             }
                         }, 500);
                     });
+
+                    function reloadTemplateFields(template_uuid) {
+                        // Show loading indicator
+                        fieldsContainer.html('<p>Loading template...</p>');
+
+                        // Make AJAX call to fetch template data
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'load_template_fields',
+                                template_uuid: template_uuid,
+                                post_id: '<?php echo $post->ID; ?>',
+                                nonce: '<?php echo wp_create_nonce("load_template_fields"); ?>'
+                            },
+                            success: function(response) {
+                                if (response) {
+                                    fieldsContainer.html(response);
+                                    // Re-apply QR visibility state after reload
+                                    $('tr:has(input[name="passentry_value_qr_value"])').toggle($('#_passentry_qr_enabled').is(':checked'));
+                                } else {
+                                    fieldsContainer.html('<p style="color: red;">No template found with this UUID</p>');
+                                }
+                            },
+                            error: function() {
+                                fieldsContainer.html('<p style="color: red;">Failed to load template</p>');
+                            }
+                        });
+                    }
                 });
             </script>
         </div>
@@ -245,7 +332,7 @@ class Product_Template_Handler {
         echo '<div class="options_group">';
         echo '<h4 style="padding-left: 12px;">' . __('Field Mapping', 'woocommerce-passentry-api') . '</h4>';
         
-        // Start table
+  
         echo '<table class="widefat fixed" style="margin: 10px; width: calc(100% - 20px);">
                 <thead>
                     <tr>
@@ -257,9 +344,58 @@ class Product_Template_Handler {
 
         // Get stored field mappings
         $stored_mappings = get_post_meta($post_id, '_passentry_field_mappings', true);
-        error_log("stored_mappings: " . $stored_mappings);
         $field_mappings = !empty($stored_mappings) ? json_decode($stored_mappings, true) : [];
 
+        // Add QR Value field if QR is enabled
+        $qr_enabled = get_post_meta($post_id, '_passentry_qr_enabled', true);
+        if ($qr_enabled === 'yes') {
+            $qr_value = isset($field_mappings['qr_value']) ? $field_mappings['qr_value']['value'] : '';
+            
+            echo '<tr>
+                    <td>' . esc_html__('QR Code Value', 'woocommerce-passentry-api') . '</td>
+                    <td>
+                        <input type="hidden" 
+                            name="passentry_field_qr_value" 
+                            value="qr_value">
+                        <input type="hidden" 
+                            name="passentry_label_qr_value" 
+                            value="QR Code Value">
+                        <input type="text" 
+                            name="passentry_value_qr_value" 
+                            class="regular-text" 
+                            value="' . esc_attr($qr_value) . '"
+                            style="width: 100%;"
+                            placeholder="' . esc_attr__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') . '">
+                    </td>
+                </tr>';
+        }
+
+        // Add NFC Value fields if NFC is enabled
+        $nfc_enabled = get_post_meta($post_id, '_passentry_nfc_enabled', true);
+        if ($nfc_enabled === 'yes') {
+            $nfc_value = isset($field_mappings['nfc_value']) ? $field_mappings['nfc_value']['value'] : '';
+            $custom_nfc_value = isset($field_mappings['custom_nfc_value']) ? $field_mappings['custom_nfc_value']['value'] : '';
+
+            echo '<tr>
+                    <td>' . esc_html__('Custom NFC Value', 'woocommerce-passentry-api') . '</td>
+                    <td>
+                        <input type="hidden" 
+                            name="passentry_field_custom_nfc_value" 
+                            value="custom_nfc_value">
+                        <input type="hidden" 
+                            name="passentry_label_custom_nfc_value" 
+                            value="Custom NFC Value">
+                        <input type="text" 
+                            name="passentry_value_custom_nfc_value" 
+                            class="regular-text" 
+                            value="' . esc_attr($custom_nfc_value) . '"
+                            style="width: 100%;"
+                            placeholder="' . esc_attr__('Enter custom NFC value', 'woocommerce-passentry-api') . '">
+                    </td>
+                </tr>';
+        }
+
+        // Continue with regular fields
         foreach ($sections as $section => $fields) {
             if (isset($attributes[$section])) {
                 foreach ($fields as $field) {

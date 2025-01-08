@@ -130,18 +130,30 @@ class Order_Template_Handler {
             $pass_data = [
                 'pass' => [
                     'nfc' => ['enabled' => $nfc_enabled],
-                    'qr' => $qr_enabled ? [
-                        'value' => '123abcd',
-                        'displayText' => true
-                    ] : [
-                        'enabled' => false
-                    ]
                 ]
             ];
+            
+            if ($qr_enabled) {
+                $pass_data['pass']['qr'] = [
+                    'value' => $field_mappings['qr_value']['value'],
+                    'displayText' => true
+                ];
+            }
+
+            if ($nfc_enabled && isset($field_mappings['nfc_value']) && !empty($field_mappings['nfc_value']['value'])) {
+                $pass_data['pass']['nfc']['customValue'] = $field_mappings['nfc_value']['value'];
+            }
+            
+            error_log("pass_data: " . json_encode($pass_data));
 
             // Add field values from mappings
             if (!empty($field_mappings)) {
                 foreach ($field_mappings as $field_id => $field_config) {
+                    // Skip qr_value field
+                    if ($field_id === 'qr_value') {
+                        continue;
+                    }
+                    
                     if (isset($field_config['value'])) {
                         $pass_data['pass'][$field_id] = $field_config['value'];
                     }
