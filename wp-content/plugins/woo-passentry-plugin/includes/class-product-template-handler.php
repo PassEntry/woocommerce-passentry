@@ -150,12 +150,19 @@ class Product_Template_Handler {
                                 var $newRow = $('<tr>\
                                     <td>' + wp.i18n.__('QR Code Value', 'woocommerce-passentry-api') + '</td>\
                                     <td>\
+                                        <select name="passentry_type_qr_value" style="width: 100%;">\
+                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
+                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
+                                        </select>\
+                                    </td>\
+                                    <td>\
                                         <input type="hidden" name="passentry_field_qr_value" value="qr_value">\
                                         <input type="hidden" name="passentry_label_qr_value" value="QR Code Value">\
                                         <input type="text" name="passentry_value_qr_value" class="regular-text" \
                                             style="width: 100%;" \
                                             placeholder="' + wp.i18n.__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') + '">\
                                     </td>\
+                                    
                                 </tr>');
                                 
                                 // Insert after the first field in the mapping table
@@ -182,6 +189,12 @@ class Product_Template_Handler {
                                 // Create new Custom NFC field if it doesn't exist
                                 var $customNfcRow = $('<tr>\
                                     <td>' + wp.i18n.__('Custom NFC Value', 'woocommerce-passentry-api') + '</td>\
+                                    <td>\
+                                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">\
+                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
+                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
+                                        </select>\
+                                    </td>\
                                     <td>\
                                         <input type="hidden" name="passentry_field_custom_nfc_value" value="custom_nfc_value">\
                                         <input type="hidden" name="passentry_label_custom_nfc_value" value="Custom NFC Value">\
@@ -336,8 +349,10 @@ class Product_Template_Handler {
         echo '<table class="widefat fixed" style="margin: 10px; width: calc(100% - 20px);">
                 <thead>
                     <tr>
-                        <th style="width: 30%;">' . __('Field', 'woocommerce-passentry-api') . '</th>
-                        <th style="width: 70%;">' . __('Value', 'woocommerce-passentry-api') . '</th>
+                        <th style="width: 25%;">' . __('Field', 'woocommerce-passentry-api') . '</th>
+                        <th style="width: 15%;">' . __('Type', 'woocommerce-passentry-api') . '</th>
+                        <th style="width: 60%;">' . __('Value', 'woocommerce-passentry-api') . '</th>
+                        
                     </tr>
                 </thead>
                 <tbody>';
@@ -354,6 +369,12 @@ class Product_Template_Handler {
             echo '<tr>
                     <td>' . esc_html__('QR Code Value', 'woocommerce-passentry-api') . '</td>
                     <td>
+                        <select name="passentry_type_qr_value" style="width: 100%;">
+                            <option value="static">' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                            <option value="dynamic">' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                        </select>
+                    </td>
+                    <td>
                         <input type="hidden" 
                             name="passentry_field_qr_value" 
                             value="qr_value">
@@ -367,6 +388,7 @@ class Product_Template_Handler {
                             style="width: 100%;"
                             placeholder="' . esc_attr__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') . '">
                     </td>
+                    
                 </tr>';
         }
 
@@ -378,6 +400,12 @@ class Product_Template_Handler {
 
             echo '<tr>
                     <td>' . esc_html__('Custom NFC Value', 'woocommerce-passentry-api') . '</td>
+                     <td>
+                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">
+                            <option value="static">' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                            <option value="dynamic">' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                        </select>
+                    </td>
                     <td>
                         <input type="hidden" 
                             name="passentry_field_custom_nfc_value" 
@@ -392,6 +420,7 @@ class Product_Template_Handler {
                             style="width: 100%;"
                             placeholder="' . esc_attr__('Enter custom NFC value', 'woocommerce-passentry-api') . '">
                     </td>
+                   
                 </tr>';
         }
 
@@ -402,32 +431,28 @@ class Product_Template_Handler {
                     if (!empty($attributes[$section][$field]['id'])) {
                         $field_id = $attributes[$section][$field]['id'];
                         $field_label = $attributes[$section][$field]['label'];
-
-                        // Get stored value if it exists
                         $stored_value = '';
+                        $stored_type = 'static'; // Default to static
+
                         if (!empty($field_mappings[$field_id])) {
-                            error_log("field_mapping: " . $field_mappings[$field_id]);
                             $stored_value = $field_mappings[$field_id]['value'] ?? '';
+                            $stored_type = $field_mappings[$field_id]['type'] ?? 'static';
                         }
 
-                        // Hidden fields for field ID and label
-                        echo '<input type="hidden" 
-                            name="passentry_field_' . esc_attr($field_id) . '" 
-                            value="' . esc_attr($field_id) . '">';
-                        echo '<input type="hidden" 
-                            name="passentry_label_' . esc_attr($field_id) . '" 
-                            value="' . esc_attr($field_label) . '">';
-
-                        // The visible form fields - now with stored value
                         echo '<tr>
                                 <td>' . esc_html($field_label) . '</td>
                                 <td>
-                                    <input type="text" 
-                                        name="passentry_value_' . esc_attr($field_id) . '" 
-                                        class="regular-text" 
-                                        value="' . esc_attr($stored_value) . '"
-                                        style="width: 100%;">
+                                    <select name="passentry_type_' . esc_attr($field_id) . '" style="width: 100%;">
+                                        <option value="static" ' . selected($stored_type, 'static', false) . '>' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                                        <option value="dynamic" ' . selected($stored_type, 'dynamic', false) . '>' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                                    </select>
                                 </td>
+                                <td>
+                                    <input type="hidden" name="passentry_field_' . esc_attr($field_id) . '" value="' . esc_attr($field_id) . '">
+                                    <input type="hidden" name="passentry_label_' . esc_attr($field_id) . '" value="' . esc_attr($field_label) . '">
+                                    <input type="text" name="passentry_value_' . esc_attr($field_id) . '" class="regular-text" value="' . esc_attr($stored_value) . '" style="width: 100%;">
+                                </td>
+                                
                             </tr>';
                     }
                 }
