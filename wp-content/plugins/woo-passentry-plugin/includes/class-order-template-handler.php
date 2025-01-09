@@ -135,14 +135,18 @@ class Order_Template_Handler {
             
             if ($qr_enabled) {
                 $pass_data['pass']['qr'] = [
-                    'value' => $field_mappings['qr_value']['value'],
+                    'value' => $field_mappings['qr_value']['type'] === 'dynamic' ? $this->get_dynamic_values($field_mappings['qr_value']['value'], $order) : $field_mappings['qr_value']['value'],
                     'displayText' => true
                 ];
             }
 
             if ($nfc_enabled && isset($field_mappings['custom_nfc_value']) && !empty($field_mappings['custom_nfc_value']['value'])) {
                 $pass_data['pass']['nfc']['source'] = 'custom';
-                $pass_data['pass']['nfc']['customValue'] = $field_mappings['custom_nfc_value']['value'];
+                if ($field_mappings['custom_nfc_value']['type'] === 'dynamic') {
+                    $pass_data['pass']['nfc']['customValue'] = $this->get_dynamic_values($field_mappings['custom_nfc_value']['value'], $order);
+                } else {
+                    $pass_data['pass']['nfc']['customValue'] = $field_mappings['custom_nfc_value']['value'];
+                }
             }
             
             error_log("pass_data: " . json_encode($pass_data));
@@ -210,7 +214,7 @@ class Order_Template_Handler {
     private function get_dynamic_values($value, $order) {
         switch ($value) {
             case 'order_id':
-                return $order->get_id();
+                return strval($order->get_id());
             case 'full_name':
                 $first_name = $order->get_billing_first_name();
                 $last_name = $order->get_billing_last_name();
