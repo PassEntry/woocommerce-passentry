@@ -54,9 +54,8 @@ class Product_Template_Handler {
 
     private function get_dynamic_values() {
         return [
-            'option1' => __('Option 1', 'woocommerce-passentry-api'),
-            'option2' => __('Option 2', 'woocommerce-passentry-api'),
-            'option3' => __('Option 3', 'woocommerce-passentry-api')
+            'full_name' => __('Full Name', 'woocommerce-passentry-api'),
+            'order_id' => __('Order ID', 'woocommerce-passentry-api'),
         ];
     }
 
@@ -658,9 +657,9 @@ class Product_Template_Handler {
                 $type_key = "passentry_type_{$field_id}";
                 $label_key = "passentry_label_{$field_id}";
 
-                error_log("FIELD ID: " . $field_id);
-                error_log("TYPE KEY: " . $type_key);
-                error_log("TYPE VALUE: " . $_POST[$type_key]);
+                // error_log("FIELD ID: " . $field_id);
+                // error_log("TYPE KEY: " . $type_key);
+                // error_log("TYPE VALUE: " . $_POST[$type_key]);
                 
                 // Only process if we have both value and type keys in POST data
                 if (isset($_POST[$value_key])) {

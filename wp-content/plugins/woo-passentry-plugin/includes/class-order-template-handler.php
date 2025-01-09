@@ -140,8 +140,9 @@ class Order_Template_Handler {
                 ];
             }
 
-            if ($nfc_enabled && isset($field_mappings['nfc_value']) && !empty($field_mappings['nfc_value']['value'])) {
-                $pass_data['pass']['nfc']['customValue'] = $field_mappings['nfc_value']['value'];
+            if ($nfc_enabled && isset($field_mappings['custom_nfc_value']) && !empty($field_mappings['custom_nfc_value']['value'])) {
+                $pass_data['pass']['nfc']['source'] = 'custom';
+                $pass_data['pass']['nfc']['customValue'] = $field_mappings['custom_nfc_value']['value'];
             }
             
             error_log("pass_data: " . json_encode($pass_data));
@@ -149,13 +150,20 @@ class Order_Template_Handler {
             // Add field values from mappings
             if (!empty($field_mappings)) {
                 foreach ($field_mappings as $field_id => $field_config) {
+                    error_log("field_id: " . $field_id);
+                    error_log("field_config: " . json_encode($field_config));
                     // Skip qr_value field
-                    if ($field_id === 'qr_value') {
+                    if ($field_id === 'qr_value' || $field_id === 'custom_nfc_value') {
                         continue;
                     }
                     
                     if (isset($field_config['value'])) {
-                        $pass_data['pass'][$field_id] = $field_config['value'];
+                        // Check if field type is dynamic
+                        if (isset($field_config['type']) && $field_config['type'] === 'dynamic') {
+                            $pass_data['pass'][$field_id] = $this->get_dynamic_values($field_config['value'], $order);
+                        } else {
+                            $pass_data['pass'][$field_id] = $field_config['value'];
+                        }
                     }
                 }
             }
@@ -197,5 +205,21 @@ class Order_Template_Handler {
         }
 
         return $fields;
+    }
+
+    private function get_dynamic_values($value, $order) {
+        switch ($value) {
+            case 'order_id':
+                return $order->get_id();
+            case 'full_name':
+                $first_name = $order->get_billing_first_name();
+                $last_name = $order->get_billing_last_name();
+                if (empty($first_name) && empty($last_name)) {
+                    return 'Guest';
+                }
+                return trim($first_name . ' ' . $last_name);
+            default:
+                return $value;
+        }
     }
 }
