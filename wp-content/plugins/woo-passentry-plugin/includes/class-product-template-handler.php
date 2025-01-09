@@ -18,9 +18,8 @@ class Product_Template_Handler {
         $api_handler = new API_Handler();
         $response = $api_handler->request("/api/v1/pass_templates/{$uuid}");
         
-        // Pretty print debug logging with clear separation
-        error_log("\n=== PassEntry Template Response ===");
-        error_log("Template UUID: " . $uuid);
+        // error_log("\n=== PassEntry Template Response ===");
+        // error_log("Template UUID: " . $uuid);
         
         if (!$response || isset($response['error'])) {
             error_log("Error fetching template:");
@@ -28,7 +27,6 @@ class Product_Template_Handler {
             return null;
         }
 
-        // Log specific sections separately for better readability
         if (isset($response['data']['attributes'])) {
             $attrs = $response['data']['attributes'];
             error_log("\nTemplate Basic Info:");
@@ -39,7 +37,7 @@ class Product_Template_Handler {
             error_log("\nTemplate Fields:");
             foreach (['header', 'primary', 'secondary', 'auxiliary', 'backFields'] as $section) {
                 if (isset($attrs[$section])) {
-                    error_log("\n" . strtoupper($section) . " Fields:");
+                    // error_log("\n" . strtoupper($section) . " Fields:");
                     foreach ($attrs[$section] as $key => $field) {
                         if (!empty($field['id'])) {
                             error_log("- {$key}: ID={$field['id']}, Label={$field['label']}, Default={$field['default_value']}");
@@ -52,6 +50,14 @@ class Product_Template_Handler {
         error_log("=====================================\n");
         
         return $response;
+    }
+
+    private function get_dynamic_values() {
+        return [
+            'option1' => __('Option 1', 'woocommerce-passentry-api'),
+            'option2' => __('Option 2', 'woocommerce-passentry-api'),
+            'option3' => __('Option 3', 'woocommerce-passentry-api')
+        ];
     }
 
     public function add_template_field() {
@@ -111,19 +117,23 @@ class Product_Template_Handler {
 
             <script type="text/javascript">
                 jQuery(function($) {
-                    // Prevent default WooCommerce checkbox behavior
-                    $(document).off('click', '.woocommerce-save-button');
+                    // Remove the problematic WooCommerce save button handler
+                    // $(document).off('click', '.woocommerce-save-button');
                     
                     var templateInput = $('#_passentry_template_uuid');
                     var fieldsContainer = $('#passentry_template_fields');
                     var debounceTimeout;
 
-                    // Prevent form submission on checkbox changes
+                    // Update the form submission handler to be more specific
                     $('form#post').on('submit', function(e) {
-                        if (e.target.activeElement.type === 'checkbox') {
+                        // e.preventDefault();
+                        // Only prevent default for checkbox clicks
+                        if (e.target.activeElement && e.target.activeElement.type === 'checkbox') {
                             e.preventDefault();
                             return false;
                         }
+                        // Allow normal form submission for other cases
+                        return true;
                     });
 
                     // Unbind any existing handlers first
@@ -150,19 +160,18 @@ class Product_Template_Handler {
                                 var $newRow = $('<tr>\
                                     <td>' + wp.i18n.__('QR Code Value', 'woocommerce-passentry-api') + '</td>\
                                     <td>\
-                                        <select name="passentry_type_qr_value" style="width: 100%;">\
-                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
-                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
-                                        </select>\
-                                    </td>\
-                                    <td>\
                                         <input type="hidden" name="passentry_field_qr_value" value="qr_value">\
                                         <input type="hidden" name="passentry_label_qr_value" value="QR Code Value">\
                                         <input type="text" name="passentry_value_qr_value" class="regular-text" \
                                             style="width: 100%;" \
                                             placeholder="' + wp.i18n.__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') + '">\
                                     </td>\
-                                    
+                                    <td>\
+                                        <select name="passentry_type_qr_value" style="width: 100%;">\
+                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
+                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
+                                        </select>\
+                                    </td>\
                                 </tr>');
                                 
                                 // Insert after the first field in the mapping table
@@ -190,17 +199,17 @@ class Product_Template_Handler {
                                 var $customNfcRow = $('<tr>\
                                     <td>' + wp.i18n.__('Custom NFC Value', 'woocommerce-passentry-api') + '</td>\
                                     <td>\
-                                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">\
-                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
-                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
-                                        </select>\
-                                    </td>\
-                                    <td>\
                                         <input type="hidden" name="passentry_field_custom_nfc_value" value="custom_nfc_value">\
                                         <input type="hidden" name="passentry_label_custom_nfc_value" value="Custom NFC Value">\
                                         <input type="text" name="passentry_value_custom_nfc_value" class="regular-text" \
                                             style="width: 100%;" \
                                             placeholder="' + wp.i18n.__('Enter custom NFC value', 'woocommerce-passentry-api') + '">\
+                                    </td>\
+                                    <td>\
+                                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">\
+                                            <option value="static">' + wp.i18n.__('Static', 'woocommerce-passentry-api') + '</option>\
+                                            <option value="dynamic">' + wp.i18n.__('Dynamic', 'woocommerce-passentry-api') + '</option>\
+                                        </select>\
                                     </td>\
                                 </tr>');
                                 
@@ -266,6 +275,79 @@ class Product_Template_Handler {
                             }
                         });
                     }
+
+                    function createDynamicSelect(fieldName, currentValue) {
+                        var options = <?php echo json_encode($this->get_dynamic_values()); ?>;
+                        var select = '<select name="' + fieldName + '" style="width: 100%;">';
+                        
+                        Object.keys(options).forEach(function(key) {
+                            var selected = currentValue === key ? ' selected' : '';
+                            select += '<option value="' + key + '"' + selected + '>' + options[key] + '</option>';
+                        });
+                        
+                        select += '</select>';
+                        return select;
+                    }
+
+                    // Update type select change handlers
+                    $(document).on('change', 'select[name^="passentry_type_"]', function() {
+                        var fieldName = $(this).attr('name').replace('type_', 'value_');
+                        var currentValue = $('[name="' + fieldName + '"]').val();
+                        var container = $(this).closest('tr').find('td:eq(1)');
+                        
+                        console.log("Type changed: " + $(this).val());
+                        console.log("Field name: " + fieldName);
+                        console.log("Current value: " + currentValue);
+
+                        if ($(this).val() === 'dynamic') {
+                            var dynamicSelect = createDynamicSelect(fieldName, currentValue);
+                            container.html(dynamicSelect);
+                            // Trigger change to ensure the value is set
+                            container.find('select').val(currentValue).trigger('change');
+                        } else {
+                            container.html('<input type="text" name="' + fieldName + '" class="regular-text" ' +
+                                'style="width: 100%;" value="' + currentValue + '" placeholder="' + 
+                                wp.i18n.__('Enter value', 'woocommerce-passentry-api') + '">');
+                        }
+                    });
+
+                    // Add handler for dynamic select changes
+                    $(document).on('change', 'select[name^="passentry_value_"]', function() {
+                        var value = $(this).val();
+                        var name = $(this).attr('name');
+                        console.log('Dynamic select changed:', name, 'New value:', value);
+                        
+                        // Ensure the value persists
+                        $(this).attr('data-value', value);
+                    });
+
+                    // Add form submit handler to debug values
+                    $('form#post').on('submit', function() {
+                        console.log('Form submitting...');
+                        
+                        // Log all passentry fields
+                        var formData = {};
+                        $('[name^="passentry_"]').each(function() {
+                            var $field = $(this);
+                            var name = $field.attr('name');
+                            var value = $field.val();
+                            var type = $(this).closest('tr').find('select[name^="passentry_type_"]').val() || 'static';
+                            formData[name] = {
+                                value: value,
+                                type: type,
+                            };
+                            console.log('Field:', name, 'Value:', value, 'Type:', type, 'Is Select:', $field.is('select'));
+                        });
+                        
+                        console.log('Complete form data:', formData);
+                    });
+
+                    // Initialize dynamic fields on page load
+                    $('select[name^="passentry_type_"]').each(function() {
+                        if ($(this).val() === 'dynamic') {
+                            $(this).trigger('change');
+                        }
+                    });
                 });
             </script>
         </div>
@@ -273,24 +355,23 @@ class Product_Template_Handler {
     }
 
     public function render_template_fields($template_uuid, $post_id) {
-        error_log("\n=== PassEntry Template Fields Debug ===");
+        // error_log("\n=== PassEntry Template Fields Debug ===");
         
-        // Get and log all post meta
-        $all_meta = get_post_meta($post_id);
-        $log_data = [
-            'post_id' => $post_id,
-            'all_meta' => $all_meta,
-            'passentry_meta' => array_filter(
-                $all_meta, 
-                function($key) {
-                    return strpos($key, '_passentry_') === 0;
-                }, 
-                ARRAY_FILTER_USE_KEY
-            )
-        ];
+        // $all_meta = get_post_meta($post_id);
+        // $log_data = [
+        //     'post_id' => $post_id,
+        //     'all_meta' => $all_meta,
+        //     'passentry_meta' => array_filter(
+        //         $all_meta, 
+        //         function($key) {
+        //             return strpos($key, '_passentry_') === 0;
+        //         }, 
+        //         ARRAY_FILTER_USE_KEY
+        //     )
+        // ];
         
-        error_log(json_encode($log_data, JSON_PRETTY_PRINT));
-        error_log("=====================================\n");
+        // // error_log(json_encode($log_data));
+        // error_log("=====================================\n");
 
         $template = self::get_template_by_uuid($template_uuid);
         
@@ -300,14 +381,14 @@ class Product_Template_Handler {
         }
 
         // Debug log the template data
-        error_log(str_repeat("=", 50));
-        error_log("PassEntry Template Data:");
-        error_log(json_encode([
-            'id' => $template['data']['id'],
-            'type' => $template['data']['type'],
-            'attributes' => $template['data']['attributes']
-        ], true));
-        error_log(str_repeat("=", 50));
+        // error_log(str_repeat("=", 50));
+        // error_log("PassEntry Template Data:");
+        // error_log(json_encode([
+        //     'id' => $template['data']['id'],
+        //     'type' => $template['data']['type'],
+        //     'attributes' => $template['data']['attributes']
+        // ], true));
+        // error_log(str_repeat("=", 50));
 
         $attributes = $template['data']['attributes'];
 
@@ -326,13 +407,9 @@ class Product_Template_Handler {
             return $value;
         }, $all_meta);
         
-        error_log(PHP_EOL . "=== Post Meta for Product {$post_id} ===" . PHP_EOL);
-        error_log(str_replace('\/', '/', print_r(json_encode($clean_meta, 
-            JSON_PRETTY_PRINT | 
-            JSON_UNESCAPED_SLASHES | 
-            JSON_UNESCAPED_UNICODE
-        ), true)));
-        error_log(str_repeat("=", 50) . PHP_EOL);
+        // error_log(PHP_EOL . "=== Post Meta for Product {$post_id} ===" . PHP_EOL);
+        // error_log(json_encode($clean_meta));
+        // error_log(str_repeat("=", 50) . PHP_EOL);
 
         $sections = [
             'header' => ['header_one', 'header_two', 'header_three'],
@@ -350,9 +427,8 @@ class Product_Template_Handler {
                 <thead>
                     <tr>
                         <th style="width: 25%;">' . __('Field', 'woocommerce-passentry-api') . '</th>
-                        <th style="width: 15%;">' . __('Type', 'woocommerce-passentry-api') . '</th>
                         <th style="width: 60%;">' . __('Value', 'woocommerce-passentry-api') . '</th>
-                        
+                        <th style="width: 15%;">' . __('Type', 'woocommerce-passentry-api') . '</th>
                     </tr>
                 </thead>
                 <tbody>';
@@ -365,15 +441,10 @@ class Product_Template_Handler {
         $qr_enabled = get_post_meta($post_id, '_passentry_qr_enabled', true);
         if ($qr_enabled === 'yes') {
             $qr_value = isset($field_mappings['qr_value']) ? $field_mappings['qr_value']['value'] : '';
+            $qr_type = isset($field_mappings['qr_value']) ? $field_mappings['qr_value']['type'] : 'static';
             
             echo '<tr>
                     <td>' . esc_html__('QR Code Value', 'woocommerce-passentry-api') . '</td>
-                    <td>
-                        <select name="passentry_type_qr_value" style="width: 100%;">
-                            <option value="static">' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
-                            <option value="dynamic">' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
-                        </select>
-                    </td>
                     <td>
                         <input type="hidden" 
                             name="passentry_field_qr_value" 
@@ -388,24 +459,24 @@ class Product_Template_Handler {
                             style="width: 100%;"
                             placeholder="' . esc_attr__('Enter QR code value or leave blank for auto-generation', 'woocommerce-passentry-api') . '">
                     </td>
-                    
+                    <td>
+                        <select name="passentry_type_qr_value" style="width: 100%;">
+                            <option value="static" ' . selected($qr_type, 'static', false) . '>' . 
+                                esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                            <option value="dynamic" ' . selected($qr_type, 'dynamic', false) . '>' . 
+                                esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                        </select>
+                    </td>
                 </tr>';
         }
 
         // Add NFC Value fields if NFC is enabled
         $nfc_enabled = get_post_meta($post_id, '_passentry_nfc_enabled', true);
         if ($nfc_enabled === 'yes') {
-            $nfc_value = isset($field_mappings['nfc_value']) ? $field_mappings['nfc_value']['value'] : '';
             $custom_nfc_value = isset($field_mappings['custom_nfc_value']) ? $field_mappings['custom_nfc_value']['value'] : '';
-
+            $custom_nfc_type = isset($field_mappings['custom_nfc_value']) ? $field_mappings['custom_nfc_value']['type'] : 'static';
             echo '<tr>
                     <td>' . esc_html__('Custom NFC Value', 'woocommerce-passentry-api') . '</td>
-                     <td>
-                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">
-                            <option value="static">' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
-                            <option value="dynamic">' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
-                        </select>
-                    </td>
                     <td>
                         <input type="hidden" 
                             name="passentry_field_custom_nfc_value" 
@@ -420,7 +491,14 @@ class Product_Template_Handler {
                             style="width: 100%;"
                             placeholder="' . esc_attr__('Enter custom NFC value', 'woocommerce-passentry-api') . '">
                     </td>
-                   
+                    <td>
+                        <select name="passentry_type_custom_nfc_value" style="width: 100%;">
+                            <option value="static" ' . selected($custom_nfc_type, 'static', false) . '>' . 
+                                esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                            <option value="dynamic" ' . selected($custom_nfc_type, 'dynamic', false) . '>' . 
+                                esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                        </select>
+                    </td>
                 </tr>';
         }
 
@@ -432,28 +510,50 @@ class Product_Template_Handler {
                         $field_id = $attributes[$section][$field]['id'];
                         $field_label = $attributes[$section][$field]['label'];
                         $stored_value = '';
-                        $stored_type = 'static'; // Default to static
+                        $stored_type = 'static';
 
                         if (!empty($field_mappings[$field_id])) {
+                            error_log("FIELD MAPPING: " . json_encode($field_mappings[$field_id]));
                             $stored_value = $field_mappings[$field_id]['value'] ?? '';
                             $stored_type = $field_mappings[$field_id]['type'] ?? 'static';
                         }
+                        // error_log("STORED VALUE: " . $stored_value);
+                        // error_log("STORED TYPE: " . $stored_type);
+                        // error_log("COMPUTED TYPE:" . print_r($field_mappings[$field_id]['type'], true));
 
                         echo '<tr>
                                 <td>' . esc_html($field_label) . '</td>
-                                <td>
-                                    <select name="passentry_type_' . esc_attr($field_id) . '" style="width: 100%;">
-                                        <option value="static" ' . selected($stored_type, 'static', false) . '>' . esc_html__('Static', 'woocommerce-passentry-api') . '</option>
-                                        <option value="dynamic" ' . selected($stored_type, 'dynamic', false) . '>' . esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="hidden" name="passentry_field_' . esc_attr($field_id) . '" value="' . esc_attr($field_id) . '">
-                                    <input type="hidden" name="passentry_label_' . esc_attr($field_id) . '" value="' . esc_attr($field_label) . '">
-                                    <input type="text" name="passentry_value_' . esc_attr($field_id) . '" class="regular-text" value="' . esc_attr($stored_value) . '" style="width: 100%;">
-                                </td>
-                                
-                            </tr>';
+                                <td>';
+                        
+                        // Output hidden fields
+                        echo '<input type="hidden" name="passentry_field_' . esc_attr($field_id) . '" value="' . esc_attr($field_id) . '">
+                              <input type="hidden" name="passentry_label_' . esc_attr($field_id) . '" value="' . esc_attr($field_label) . '">';
+                        
+                        // Output value field based on type
+                        if ($stored_type === 'dynamic') {
+                            echo '<select name="passentry_value_' . esc_attr($field_id) . '" style="width: 100%;">';
+                            foreach ($this->get_dynamic_values() as $value => $label) {
+                                echo '<option value="' . esc_attr($value) . '" ' . 
+                                     selected($stored_value, $value, false) . '>' . 
+                                     esc_html($label) . '</option>';
+                            }
+                            echo '</select>';
+                        } else {
+                            echo '<input type="text" name="passentry_value_' . esc_attr($field_id) . 
+                                 '" class="regular-text" value="' . esc_attr($stored_value) . 
+                                 '" style="width: 100%;">';
+                        }
+
+                        echo '</td>
+                              <td>
+                                  <select name="passentry_type_' . esc_attr($field_id) . '" style="width: 100%;">
+                                      <option value="static" ' . selected($stored_type, 'static', false) . '>' . 
+                                          esc_html__('Static', 'woocommerce-passentry-api') . '</option>
+                                      <option value="dynamic" ' . selected($stored_type, 'dynamic', false) . '>' . 
+                                          esc_html__('Dynamic', 'woocommerce-passentry-api') . '</option>
+                                  </select>
+                              </td>
+                          </tr>';
                     }
                 }
             }
@@ -469,11 +569,11 @@ class Product_Template_Handler {
         $template_uuid = sanitize_text_field($_POST['template_uuid']);
         $post_id = intval($_POST['post_id']);
         
-        error_log('PassEntry: Loading template fields for UUID: ' . $template_uuid);
+        // error_log('PassEntry: Loading template fields for UUID: ' . $template_uuid);
         
         $template = self::get_template_by_uuid($template_uuid);
         
-        error_log('PassEntry: Template data in load_template_fields: ' . json_encode($template, JSON_PRETTY_PRINT));
+        // error_log('PassEntry: Template data in load_template_fields: ' . json_encode($template));
         
         if ($template) {
             ob_start();
@@ -484,7 +584,7 @@ class Product_Template_Handler {
             $this->render_template_fields($template_uuid, $post_id);
             $html = ob_get_clean();
             
-            error_log('PassEntry: Generated HTML: ' . $html);
+            // error_log('PassEntry: Generated HTML: ' . $html);
             
             echo $html;
         } else {
@@ -499,17 +599,15 @@ class Product_Template_Handler {
             return;
         }
 
-        // Debug log at start of save
-        error_log("\n=== PassEntry Save Template Fields ===");
-        $log_data = [
-            'post_id' => $post_id,
-            'post_data' => $_POST,
-            'field_mappings' => $field_mappings,
-            'final_meta' => get_post_meta($post_id)
-        ];
+        // error_log("\n=== PassEntry Save Template Fields ===");
+        // $log_data = [
+        //     'post_id' => $post_id,
+        //     'post_data' => $_POST,
+        //     'final_meta' => get_post_meta($post_id)
+        // ];
         
-        error_log(json_encode($log_data, JSON_PRETTY_PRINT));
-        error_log("=====================================\n");
+        // error_log(json_encode($log_data));
+        // error_log("=====================================\n");
 
         // Save basic settings
         $passentry_enabled = isset($_POST['_passentry_enabled']) ? 'yes' : 'no';
@@ -525,26 +623,69 @@ class Product_Template_Handler {
         // Save field mappings as an object
         $field_mappings = new stdClass();
         
-        // Loop through POST data to find field mappings
+        // First handle special fields (QR and NFC)
+        if ($qr_enabled === 'yes' && isset($_POST['passentry_value_qr_value'])) {
+            $field_mappings->qr_value = (object)[
+                'id' => 'qr_value',
+                'label' => 'QR Code Value',
+                'value' => sanitize_text_field($_POST['passentry_value_qr_value']),
+                'type' => sanitize_text_field($_POST['passentry_type_qr_value'] ?? 'static')
+            ];
+        }
+
+        if ($nfc_enabled === 'yes' && isset($_POST['passentry_value_custom_nfc_value'])) {
+            $field_mappings->custom_nfc_value = (object)[
+                'id' => 'custom_nfc_value',
+                'label' => 'Custom NFC Value',
+                'value' => sanitize_text_field($_POST['passentry_value_custom_nfc_value']),
+                'type' => sanitize_text_field($_POST['passentry_type_custom_nfc_value'] ?? 'static')
+            ];
+        }
+        error_log("POST :" . json_encode($_POST));
+        
+        // Then handle template fields
         foreach ($_POST as $key => $value) {
-            if (strpos($key, 'passentry_field_') === 0) {
-                $field_id = str_replace('passentry_field_', '', $key);
+            if (strpos($key, 'passentry_value_') === 0) {
+                $field_id = str_replace('passentry_value_', '', $key);
                 
-                // Create object for this field
-                $field_mappings->$field_id = (object)[
-                    'id' => sanitize_text_field($field_id),
-                    'label' => sanitize_text_field($_POST["passentry_label_{$field_id}"] ?? ''),
-                    'value' => sanitize_text_field($_POST["passentry_value_{$field_id}"] ?? '')
-                ];
+                // Skip QR and NFC fields as they're already handled
+                if (in_array($field_id, ['qr_value', 'custom_nfc_value'])) {
+                    continue;
+                }
+                
+                // Get the corresponding value and type keys
+                $value_key = "passentry_value_{$field_id}";
+                $type_key = "passentry_type_{$field_id}";
+                $label_key = "passentry_label_{$field_id}";
+
+                error_log("FIELD ID: " . $field_id);
+                error_log("TYPE KEY: " . $type_key);
+                error_log("TYPE VALUE: " . $_POST[$type_key]);
+                
+                // Only process if we have both value and type keys in POST data
+                if (isset($_POST[$value_key])) {
+                    $field_mappings->$field_id = (object)[
+                        'id' => sanitize_text_field($field_id),
+                        'label' => sanitize_text_field($_POST[$label_key] ?? ''),
+                        'value' => sanitize_text_field($_POST[$value_key]),
+                        'type' => sanitize_text_field($_POST[$type_key] ?? 'static')
+                    ];
+                    
+                    error_log("Saved mapping for {$field_id}:");
+                    error_log(json_encode([
+                        'value' => $_POST[$value_key],
+                        'type' => $_POST[$type_key] ?? 'static'
+                    ]));
+                }
             }
         }
 
-        // Save as JSON object
+        // Save as JSON
         update_post_meta($post_id, '_passentry_field_mappings', json_encode($field_mappings));
 
         // Log final saved state
         error_log("Final post meta after save:");
-        error_log(print_r(get_post_meta($post_id), true));
+        error_log(json_encode(get_post_meta($post_id), true));
         error_log("=====================================\n");
     }
 
