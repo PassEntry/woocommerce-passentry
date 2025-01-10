@@ -68,6 +68,7 @@ jobs:
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/woo-passentry-plugin-v${{ steps.changelog.outputs.version }}.zip
