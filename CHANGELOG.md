@@ -1,3 +1,10 @@
+## [0.2.2](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.1...v0.2.2) (2025-01-10)
+
+
+### Bug Fixes
+
+* correct zip tagging [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([5eeba1d](https://github.com/PassEntry/woocommerce-passentry/commit/5eeba1d57a117c9c802b624bffca31455e777fe1))
+
 ## [0.2.1](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.0...v0.2.1) (2025-01-10)
 
 
