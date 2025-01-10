@@ -1,3 +1,10 @@
+## [0.2.5](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.4...v0.2.5) (2025-01-10)
+
+
+### Bug Fixes
+
+* zip the updated root plugin code [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([6279919](https://github.com/PassEntry/woocommerce-passentry/commit/6279919a383fb6e247cdcb586c72b17fa4aea3d2))
+
 ## [0.2.4](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.3...v0.2.4) (2025-01-10)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * tag in ci [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([ecccdd2](https://github.com/PassEntry/woocommerce-passentry/commit/ecccdd2fca9e5aeb36f7aad069f551d228267d01))
-
-## [0.2.0](https://github.com/PassEntry/woocommerce-passentry/compare/v0.1.0...v0.2.0) (2025-01-10)
-
-
-### Features
-
-* test deploy [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([d0f32f9](https://github.com/PassEntry/woocommerce-passentry/commit/d0f32f930eabb399d16bae42f931161b2d4912f3))
 
