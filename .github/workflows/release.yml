@@ -64,7 +64,7 @@ jobs:
         run: |
           version=${{ steps.changelog.outputs.tag }}
           mkdir -p dist
-          zip -r dist/woo-passentry-plugin-${version}.zip wp-content/plugins/woo-passentry-plugin
+          zip -r dist/woo-passentry-plugin-${version}.zip woo-passentry-plugin
           ls -l dist
 
       - name: Upload Release Asset
