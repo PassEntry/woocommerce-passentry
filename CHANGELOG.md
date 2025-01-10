@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.0...v0.2.1) (2025-01-10)
+
+
+### Bug Fixes
+
+* tag in ci [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([ecccdd2](https://github.com/PassEntry/woocommerce-passentry/commit/ecccdd2fca9e5aeb36f7aad069f551d228267d01))
+
 ## [0.2.0](https://github.com/PassEntry/woocommerce-passentry/compare/v0.1.0...v0.2.0) (2025-01-10)
 
 
