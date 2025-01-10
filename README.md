@@ -21,3 +21,13 @@ This plugin allows you to create passes using Passentry API.
 - Add the static or dynamic values to the fields and save the product
 - Create an order and the pass will be created and a button will be preset for the customer to download their pass.
 
+## Installation
+1. Download the latest release.
+2. Upload it to your WordPress site under **Plugins > Add New**.
+3. Activate the plugin.
+
+## Contributing
+1. Fork the repository.
+2. Make your changes.
+3. Submit a pull request.
+

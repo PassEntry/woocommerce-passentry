@@ -56,6 +56,7 @@ class Product_Template_Handler {
         return [
             'full_name' => __('Full Name', 'woocommerce-passentry-api'),
             'order_id' => __('Order ID', 'woocommerce-passentry-api'),
+            'price' => __('Price', 'woocommerce-passentry-api'),
         ];
     }
 
@@ -146,10 +147,11 @@ class Product_Template_Handler {
                         return false;
                     });
 
-                    // Toggle QR value field visibility
-                    $('#_passentry_qr_enabled').on('change', function(e) {
+                    // Use event delegation for checkbox changes
+                    $(document).on('change', '#_passentry_qr_enabled', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('QR checkbox changed:', this.checked); // Debug log
                         
                         var $qrField = $('tr:has(input[name="passentry_value_qr_value"])');
                         
@@ -173,7 +175,6 @@ class Product_Template_Handler {
                                     </td>\
                                 </tr>');
                                 
-                                // Insert after the first field in the mapping table
                                 $('.widefat tbody tr:first').after($newRow);
                             } else {
                                 $qrField.show();
@@ -185,10 +186,10 @@ class Product_Template_Handler {
                         return false;
                     });
 
-                    // Toggle Custom NFC value field visibility
-                    $('#_passentry_nfc_enabled').on('change', function(e) {
+                    $(document).on('change', '#_passentry_nfc_enabled', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('NFC checkbox changed:', this.checked); // Debug log
                         
                         var $customNfcField = $('tr:has(input[name="passentry_value_custom_nfc_value"])');
                         
