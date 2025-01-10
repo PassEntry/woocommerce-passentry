@@ -62,7 +62,7 @@ jobs:
       - name: Create plugin ZIP
         if: ${{ steps.changelog.outputs.skipped == 'false' }}
         run: |
-          version=$(cat version.txt)
+          version=${{ steps.changelog.outputs.tag }}
           mkdir -p dist
           zip -r dist/woo-passentry-plugin-v${version}.zip woo-passentry-plugin
 
