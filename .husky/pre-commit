@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+# Define source and destination paths
+SOURCE_DIR="wp-content/plugins/woo-passentry-plugin"
+DEST_DIR="."
+
+echo "Updating files from plugin directory to root"
+# Check if source directory exists
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory $SOURCE_DIR does not exist"
+    exit 1
+fi
+
+# Remove old files from root (optional: adjust pattern as needed)
+find "$DEST_DIR" -maxdepth 1 -type f \( -name "*.php" -o -name "*.txt" \) -exec rm -f {} +
+
+# Copy files from plugin directory to root
+cp -r "$SOURCE_DIR"/* "$DEST_DIR"
+
+# Add the copied files to git staging
+git add .
+
+# Exit successfully
+exit 0
