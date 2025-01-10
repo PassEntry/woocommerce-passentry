@@ -1,3 +1,10 @@
+## [0.2.3](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.2...v0.2.3) (2025-01-10)
+
+
+### Bug Fixes
+
+* added toke for upload [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([20d9a95](https://github.com/PassEntry/woocommerce-passentry/commit/20d9a95a6c2d2cd1305804ac845443870d0a3928))
+
 ## [0.2.2](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.1...v0.2.2) (2025-01-10)
 
 
