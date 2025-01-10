@@ -60,16 +60,16 @@ jobs:
           body: ${{ steps.changelog.outputs.clean_changelog }}
 
       - name: Create plugin ZIP
-        if: ${{ steps.changelog.outputs.released == 'true' }}
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
         run: |
           version=$(cat version.txt)
           mkdir -p dist
           zip -r dist/woo-passentry-plugin-v${version}.zip woo-passentry-plugin
 
-      - name: Publish Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
         with:
-          files: dist/*.zip
-          body: ${{ steps.changelog.outputs.changelog }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/woo-passentry-plugin-v${{ steps.changelog.outputs.version }}.zip
+          asset_name: woo-passentry-plugin-v${{ steps.changelog.outputs.version }}.zip
+          asset_content_type: application/zip
