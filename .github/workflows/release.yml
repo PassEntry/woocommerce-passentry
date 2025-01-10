@@ -1,0 +1,75 @@
+name: Release WooCommerce Plugin
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Actions Bot
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.ACTIONS_BOT_ID }}
+          private-key: ${{ secrets.ACTIONS_BOT_SECRET }}
+          owner: ${{ github.repository_owner }}
+          repositories: "PassEntry-API"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
+          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
+
+      - name: Setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.4.1"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check Git version
+        run: git --version
+
+      - name: Conventional Changelog Action
+        id: changelog
+        uses: TriPSs/conventional-changelog-action@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-file-path: .github/workflows/conventional-commit.cjs
+          output-file: CHANGELOG.md
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          release_name: ${{ steps.changelog.outputs.tag }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
+
+      - name: Create plugin ZIP
+        if: ${{ steps.changelog.outputs.released == 'true' }}
+        run: |
+          version=$(cat version.txt)
+          mkdir -p dist
+          zip -r dist/woo-passentry-plugin-v${version}.zip woo-passentry-plugin
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*.zip
+          body: ${{ steps.changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
