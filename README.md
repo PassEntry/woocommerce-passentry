@@ -31,3 +31,50 @@ This plugin allows you to create passes using Passentry API.
 2. Make your changes.
 3. Submit a pull request.
 
+# Commit Guidelines
+We use [Conventional Commits](https://www.conventionalcommits.org/) for clear and automated versioning. Each commit message should be structured as follows:
+
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semi-colons, etc)
+- `refactor`: Code changes that neither fix bugs nor add features
+- `test`: Adding or modifying tests
+- `chore`: Changes to build process or auxiliary tools
+
+# Branch Naming Guidelines
+Branch names should follow the pattern: `{type}/{issue-number}-{description}`
+
+### Types
+Use the same types as commit guidelines:
+- `feat`
+- `fix`
+- `docs`
+- `style`
+- `refactor`
+- `test`
+- `chore`
+
+### Examples
+- `feat/123-add-pass-validation`
+- `fix/456-settings-crash`
+- `docs/789-update-readme`
+- `style/321-prettier-formatting`
+
+### Breaking Changes
+Breaking changes can be indicated in two ways:
+1. Using `!` after the type/scope: `type(scope)!: description`
+2. In the footer section of the commit, starting with "BREAKING CHANGE: " followed by a description
+
+### Examples
+- `feat(api): add pass template validation [#123]`
+- `fix(admin): resolve settings page crash [#456]`
+- `docs(readme): update installation instructions [#789]`
+- `style(lint): apply prettier formatting [#321]`
+- `feat(api)!: change pass creation endpoint [#555]`
+- `feat(api): add new validation rules [#777]`
+  BREAKING CHANGE: Pass creation now requires authentication token
+
+
+

@@ -135,7 +135,7 @@ class Order_Template_Handler {
             
             if ($qr_enabled) {
                 $pass_data['pass']['qr'] = [
-                    'value' => $field_mappings['qr_value']['type'] === 'dynamic' ? $this->get_dynamic_values($field_mappings['qr_value']['value'], $order) : $field_mappings['qr_value']['value'],
+                    'value' => $field_mappings['qr_value']['type'] === 'dynamic' ? $this->get_dynamic_values($field_mappings['qr_value']['value'], $order, $product) : $field_mappings['qr_value']['value'],
                     'displayText' => true
                 ];
             }
@@ -143,7 +143,7 @@ class Order_Template_Handler {
             if ($nfc_enabled && isset($field_mappings['custom_nfc_value']) && !empty($field_mappings['custom_nfc_value']['value'])) {
                 $pass_data['pass']['nfc']['source'] = 'custom';
                 if ($field_mappings['custom_nfc_value']['type'] === 'dynamic') {
-                    $pass_data['pass']['nfc']['customValue'] = $this->get_dynamic_values($field_mappings['custom_nfc_value']['value'], $order);
+                    $pass_data['pass']['nfc']['customValue'] = $this->get_dynamic_values($field_mappings['custom_nfc_value']['value'], $order, $product);
                 } else {
                     $pass_data['pass']['nfc']['customValue'] = $field_mappings['custom_nfc_value']['value'];
                 }
@@ -164,7 +164,7 @@ class Order_Template_Handler {
                     if (isset($field_config['value'])) {
                         // Check if field type is dynamic
                         if (isset($field_config['type']) && $field_config['type'] === 'dynamic') {
-                            $pass_data['pass'][$field_id] = $this->get_dynamic_values($field_config['value'], $order);
+                            $pass_data['pass'][$field_id] = $this->get_dynamic_values($field_config['value'], $order, $product);
                         } else {
                             $pass_data['pass'][$field_id] = $field_config['value'];
                         }
@@ -211,7 +211,7 @@ class Order_Template_Handler {
         return $fields;
     }
 
-    private function get_dynamic_values($value, $order) {
+    private function get_dynamic_values($value, $order, $product) {
         switch ($value) {
             case 'order_id':
                 return strval($order->get_id());
@@ -222,6 +222,8 @@ class Order_Template_Handler {
                     return 'Guest';
                 }
                 return trim($first_name . ' ' . $last_name);
+            case 'price':
+                return '£' . $product->get_price();
             default:
                 return $value;
         }
