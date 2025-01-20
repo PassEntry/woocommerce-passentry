@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce PassEntry API Integration
  * Description: Integrates WooCommerce with PassEntry API to manage templates and create template items upon purchase.
- * Version: 1.2
+ * Version: %%VERSION%%
  * Author: Your Name
  * Text Domain: woocommerce-passentry-api
  */

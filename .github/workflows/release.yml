@@ -48,6 +48,11 @@ jobs:
           config-file-path: .github/workflows/conventional-commit.cjs
           output-file: CHANGELOG.md
 
+      - name: Update plugin version
+        if: ${{ steps.changelog.outputs.skipped == 'false' }}
+        run: |
+          sed -i "s/%%VERSION%%/${{ steps.changelog.outputs.tag }}/" woo-passentry-plugin/woocommerce-passentry-api.php
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
