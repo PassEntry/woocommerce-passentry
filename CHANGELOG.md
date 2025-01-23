@@ -1,3 +1,10 @@
+## [0.3.0](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.5...v0.3.0) (2025-01-23)
+
+
+### Features
+
+* hide and toggle api key [[PS-1405](https://passentry.atlassian.net/browse/PS-1405)] ([d9a1af1](https://github.com/PassEntry/woocommerce-passentry/commit/d9a1af16366a0b61818131fb7139b85b74c19f1b))
+
 ## [0.2.5](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.4...v0.2.5) (2025-01-10)
 
 
@@ -25,11 +32,4 @@
 ### Bug Fixes
 
 * correct zip tagging [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([5eeba1d](https://github.com/PassEntry/woocommerce-passentry/commit/5eeba1d57a117c9c802b624bffca31455e777fe1))
-
-## [0.2.1](https://github.com/PassEntry/woocommerce-passentry/compare/v0.2.0...v0.2.1) (2025-01-10)
-
-
-### Bug Fixes
-
-* tag in ci [[PS-1330](https://passentry.atlassian.net/browse/PS-1330)] ([ecccdd2](https://github.com/PassEntry/woocommerce-passentry/commit/ecccdd2fca9e5aeb36f7aad069f551d228267d01))
 
