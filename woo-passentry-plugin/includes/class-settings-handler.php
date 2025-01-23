@@ -37,13 +37,28 @@ class Settings_Handler {
                     <tr valign="top">
                         <th scope="row"><?php _e('API Key', 'woocommerce-passentry-api'); ?></th>
                         <td>
-                            <input type="text" name="passentry_api_key" value="<?php echo esc_attr(get_option('passentry_api_key')); ?>" class="regular-text">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="password" id="passentry_api_key" name="passentry_api_key" value="<?php echo esc_attr(get_option('passentry_api_key')); ?>" class="regular-text">
+                                <button type="button" class="button" onclick="togglePassword()" style="height: 30px;">
+                                    <?php _e('Show/Hide', 'woocommerce-passentry-api'); ?>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
         </div>
+        <script>
+        function togglePassword() {
+            var x = document.getElementById("passentry_api_key");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+        </script>
         <?php
     }
 }

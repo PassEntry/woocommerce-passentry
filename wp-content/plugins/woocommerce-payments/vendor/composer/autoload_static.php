@@ -4,10 +4,11 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit595a21dda8d9c0943a32df05723b0e28
+class ComposerStaticInit6265907401ba377e5857d8960a5ceb1e
 {
     public static $files = array (
         '3773ef3f09c37da5478d578e32b03a4b' => __DIR__ . '/..' . '/automattic/jetpack-assets/actions.php',
+        '7372b7fb88a9723cf5b76d456eb0b738' => __DIR__ . '/..' . '/automattic/jetpack-connection/actions.php',
         'e25fc356bc58b4090924d1aac798cacd' => __DIR__ . '/../..' . '/src/wcpay-get-container.php',
     );
 
@@ -65,6 +66,7 @@ class ComposerStaticInit595a21dda8d9c0943a32df05723b0e28
         'Automattic\\Jetpack\\Config' => __DIR__ . '/..' . '/automattic/jetpack-config/src/class-config.php',
         'Automattic\\Jetpack\\Connection\\Authorize_Json_Api' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-authorize-json-api.php',
         'Automattic\\Jetpack\\Connection\\Client' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-client.php',
+        'Automattic\\Jetpack\\Connection\\Connection_Assets' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-connection-assets.php',
         'Automattic\\Jetpack\\Connection\\Connection_Notice' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-connection-notice.php',
         'Automattic\\Jetpack\\Connection\\Error_Handler' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-error-handler.php',
         'Automattic\\Jetpack\\Connection\\Initial_State' => __DIR__ . '/..' . '/automattic/jetpack-connection/src/class-initial-state.php',
@@ -406,9 +408,9 @@ class ComposerStaticInit595a21dda8d9c0943a32df05723b0e28
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit595a21dda8d9c0943a32df05723b0e28::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit595a21dda8d9c0943a32df05723b0e28::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit595a21dda8d9c0943a32df05723b0e28::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit6265907401ba377e5857d8960a5ceb1e::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit6265907401ba377e5857d8960a5ceb1e::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit6265907401ba377e5857d8960a5ceb1e::$classMap;
 
         }, null, ClassLoader::class);
     }
